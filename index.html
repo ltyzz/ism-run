@@ -374,7 +374,7 @@ const KEY = 'ismrun.v4';
 /* Access: salted SHA-256 prefixes of the invite codes. The codes themselves are not in this file. */
 const ACCESS = ["b90dc32a1ba2acda471a4131", "c28c63d4efa7e67f910b99af", "7fed16a34ab2ad11e75356df", "25903d557b09ca09c83c3b07", "0eb00a3782a0d8811eae4a56", "eca666fd250f9c1b57de59e1", "e3962d0d09ca068e791afbf7", "e69f4d82e6d0e833b06e8936", "2fe24e82b7c168b1e453d2cf", "8f170beeaccb2471705410d7", "e8575b65b07d947ba8bddde6", "f208d072647b59ada2d72229", "55db1b423a477076e509132c", "8f524ce08b4e2d852317283a", "2e25a0dc815ecfe53a09ca97", "b3a483d5a63d1ef2957e82b9", "22af4f9f1a100685cc807cff", "47cad64a6f06af89e0afff96", "b46878337c3518ba2736d778", "f530d46d3e94ce1f288aebc4", "09ceaa623218c5a9cf264c0e", "6acb43fda75143fe268058fa", "3c225ce630eb6255a2cf1b44", "40d4695cdd775076d4488e3f", "c06d531677051b8fb00da2af", "2c523ef5261bff03f43953ee", "9c0941dbda5d0548cb37477f", "e4fc750682669114e3d3f2df", "045ed86e472359fe13e955e1", "bdc709d49c9d59c12a5f7165", "709cb605daf1efe62f72cf6a", "3864173397311edbf7a6abb0", "168bf244119357573c444109", "78ed6f60a9cd794644cb7bcf", "4c84dbc135fc36336712e2cb", "384611c2f9b6ad582292f737", "1e5f3602d386ccf28dc89268", "e8481ef623e7372fe14dfbff", "17a65127427c9af97a56ab5f", "b957f66a2b172715f464d7c4", "492cbeec8dac0a178009233d", "6fe0bf51958e64cf10cf1f04", "0414521f56b3c4732044fca0", "90de17984e1b1ee0d9f0450c", "4595fd62837d206daf6966ef", "57bafff0a98c5cfa05a5bf2e", "c18e44d1b20b1f13647c8dd7", "c202dc852c134a6e2dec89ae", "043e3d8384b19746b925b2ce", "0d844dbb33bf933dec776f72"];
 /* Shared leaderboard: paste your Supabase project URL and publishable (anon) key here. Empty = scores stay on this device. */
-const ONLINE = { url: '', key: '' };
+const ONLINE = { url: 'https://ohqthhqmqjnmjquoarnr.supabase.co', key: 'sb_publishable_tvRUVQ9tBICM6bEcbaDfaA_DZjXvcsm' };
 const BASE_LOOK = { color: 'c-blue', hat: 'none', face: 'glasses', extra: 'none', frame: 'f-none', nstyle: 'n-plain', title: 't-none' };
 const save = { access: false, nick: '', look: { ...BASE_LOOK }, owned: [], scores: [], level: 0, unlocked: 0 };
 try { Object.assign(save, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
@@ -974,21 +974,34 @@ function paintCustom() {
 }
 
 /* ---------- Access code ---------- */
+function deviceId() {
+  let d = null; try { d = localStorage.getItem('ismrun.device'); } catch (e) {}
+  if (!d) { d = (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)); try { localStorage.setItem('ismrun.device', d); } catch (e) {} }
+  return d;
+}
+let gateMsg = '';
 async function codeOk(raw) {
-  const c = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/^ISM/, ''); if (c.length !== 5) return false;
+  const c = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/^ISM/, ''); gateMsg = 'That code does not work. Check it against your invite and try again.'; if (c.length !== 5) return false;
+  if (ONLINE.url) {                                // online: each code is bound to the first device that uses it
+    try { const r = await fetch(ONLINE.url + '/rest/v1/rpc/claim_code', { method: 'POST', headers: { apikey: ONLINE.key, Authorization: 'Bearer ' + ONLINE.key, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_code: 'ISM-' + c, p_device: deviceId() }) });
+      if (!r.ok) { gateMsg = 'Could not check the code right now. Check your connection and try again.'; return false; }
+      const v = await r.json(); if (v === 'ok') return true;
+      if (v === 'taken') gateMsg = 'This code is already in use on another device. Ask whoever gave you the link.'; return false;
+    } catch (e) { gateMsg = 'Could not check the code right now. Check your connection and try again.'; return false; }
+  }
   try { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('ismrun:ISM-' + c));
     return ACCESS.includes([...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('').slice(0, 24)); } catch (e) { return false; }
 }
 function openGate() { $('codeErr').textContent = ''; $('gate').hidden = false; setTimeout(() => $('codeIn').focus(), 50); }
 $('gateForm').addEventListener('submit', async e => { e.preventDefault();
   if (await codeOk($('codeIn').value)) { save.access = true; persist(); $('gate').hidden = true; startRun(); }
-  else $('codeErr').textContent = 'That code does not work. Check it against your invite and try again.'; });
+  else $('codeErr').textContent = gateMsg; });
 $('gateCancel').onclick = () => { $('gate').hidden = true; };
 (async () => {                                     // invite link: ...?code=ISM-XXXXX or #ISM-XXXXX
   const q = new URLSearchParams(location.search).get('code') || (location.hash.match(/ISM-?[A-Z0-9]{5}/i) || [])[0];
   if (!q) return;
   try { history.replaceState(null, '', location.pathname); } catch (e) {}
-  if (await codeOk(q)) { save.access = true; persist(); toast('Access unlocked. Have a good run!'); } else toast('That invite link has an unknown code');
+  if (await codeOk(q)) { save.access = true; persist(); toast('Access unlocked. Have a good run!'); } else { openGate(); $('codeIn').value = q.toUpperCase(); $('codeErr').textContent = gateMsg; }
 })();
 $('startBtn').onclick = startRun;
 $('customBtn').onclick = () => { save.nick = nickNow(); paintCustom(); show('custom'); };

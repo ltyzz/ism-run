@@ -74,6 +74,12 @@ button:focus-visible,input:focus-visible{outline:3px solid #fff;outline-offset:2
 .lv.on{background:var(--sun);color:var(--ink);transform:translateY(-4px);box-shadow:0 8px 0 var(--ink)}
 .lv.lock{font-size:18px;opacity:.75}
 .lvInfo{font-size:13px;font-weight:900;background:rgba(26,18,64,.55);border-radius:10px;padding:3px 10px;text-align:center}
+.gate{position:absolute;inset:0;z-index:8;display:flex;align-items:center;padding:16px;background:repeating-conic-gradient(from 0deg at 50% 30%,rgba(255,255,255,.09) 0 10deg,transparent 10deg 20deg),linear-gradient(180deg,var(--sky1),var(--sky2))}
+.gate .sheet{border-radius:26px;border:4px solid var(--ink);box-shadow:0 8px 0 var(--ink)}
+.gate .logo{margin:0 0 6px}
+.gate.busy .sheet>*:not(.logo):not(#gateTitle){visibility:hidden}
+.idTag{position:absolute;top:12px;right:12px;z-index:3;font-size:13px;font-weight:900;letter-spacing:.04em;background:var(--ink);border:3px solid #fff;border-radius:12px;padding:4px 10px;font-variant-numeric:tabular-nums}
+.chip.id{background:var(--ink);color:#fff;border-color:#fff}
 .codeIn{width:100%;max-width:280px;letter-spacing:.12em;text-transform:uppercase}
 .err{min-height:20px;font-size:14px;font-weight:900;color:#ffb4a3}
 .note{font-size:12px;font-weight:700;color:var(--soft);line-height:1.35;margin:0;text-align:center}
@@ -168,13 +174,14 @@ p{margin:0;font-size:15px;line-height:1.4}
 
   <div id="hud" hidden>
     <div class="timer" id="timer">00:00.00</div>
-    <div class="chips"><span class="chip" id="floorChip">FLOOR 3</span><span class="chip" id="keysChip"></span><span class="chip" id="heat">Staff: 0</span></div>
+    <div class="chips"><span class="chip id" id="idChip"></span><span class="chip" id="floorChip">FLOOR 3</span><span class="chip" id="keysChip"></span><span class="chip" id="heat">Staff: 0</span></div>
   </div>
   <div id="toast"><span id="toastText"></span></div>
   <button id="hideBtn" class="out" type="button" hidden>HIDE</button>
 
   <section id="menu" class="stage">
-    <div class="logo out">ISM <b>RUN</b></div>
+    <div class="idTag" id="idTag"></div>
+    <div class="logo out" style="margin-top:30px">ISM <b>RUN</b></div>
     <div class="ribbon">ESCAPE THE LECTURE</div>
     <div class="heroWrap">
       <canvas id="heroCv" width="480" height="560"></canvas>
@@ -214,15 +221,14 @@ p{margin:0;font-size:15px;line-height:1.4}
     </div>
   </section>
 
-  <section id="gate" class="modal" hidden>
+  <section id="gate" class="gate">
     <form class="sheet" id="gateForm" novalidate>
-      <h3>Access code</h3>
-      <h2 class="out">Enter your code</h2>
-      <p>Your code came with your invite link. It unlocks the game on this device.</p>
+      <div class="logo out">ISM <b>RUN</b></div>
+      <h2 class="out" id="gateTitle">Enter your access code</h2>
+      <p id="gateLede">Your code came with your invite. It works on one device.</p>
       <input class="nickIn codeIn" id="codeIn" type="text" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ISM-XXXXX" aria-describedby="codeErr">
       <p class="err" id="codeErr" role="alert"></p>
-      <button class="cta sm out" id="codeOk" type="submit">UNLOCK</button>
-      <div class="row"><button class="btn" id="gateCancel" type="button">Not now</button></div>
+      <button class="cta sm out" id="codeOk" type="submit">ENTER</button>
     </form>
   </section>
 
@@ -371,8 +377,6 @@ for (let pass = 0; pass < 6; pass++) {
 
 /* ---------- Saved state (one browser) ---------- */
 const KEY = 'ismrun.v4';
-/* Access: salted SHA-256 prefixes of the invite codes. The codes themselves are not in this file. */
-const ACCESS = ["b90dc32a1ba2acda471a4131", "c28c63d4efa7e67f910b99af", "7fed16a34ab2ad11e75356df", "25903d557b09ca09c83c3b07", "0eb00a3782a0d8811eae4a56", "eca666fd250f9c1b57de59e1", "e3962d0d09ca068e791afbf7", "e69f4d82e6d0e833b06e8936", "2fe24e82b7c168b1e453d2cf", "8f170beeaccb2471705410d7", "e8575b65b07d947ba8bddde6", "f208d072647b59ada2d72229", "55db1b423a477076e509132c", "8f524ce08b4e2d852317283a", "2e25a0dc815ecfe53a09ca97", "b3a483d5a63d1ef2957e82b9", "22af4f9f1a100685cc807cff", "47cad64a6f06af89e0afff96", "b46878337c3518ba2736d778", "f530d46d3e94ce1f288aebc4", "09ceaa623218c5a9cf264c0e", "6acb43fda75143fe268058fa", "3c225ce630eb6255a2cf1b44", "40d4695cdd775076d4488e3f", "c06d531677051b8fb00da2af", "2c523ef5261bff03f43953ee", "9c0941dbda5d0548cb37477f", "e4fc750682669114e3d3f2df", "045ed86e472359fe13e955e1", "bdc709d49c9d59c12a5f7165", "709cb605daf1efe62f72cf6a", "3864173397311edbf7a6abb0", "168bf244119357573c444109", "78ed6f60a9cd794644cb7bcf", "4c84dbc135fc36336712e2cb", "384611c2f9b6ad582292f737", "1e5f3602d386ccf28dc89268", "e8481ef623e7372fe14dfbff", "17a65127427c9af97a56ab5f", "b957f66a2b172715f464d7c4", "492cbeec8dac0a178009233d", "6fe0bf51958e64cf10cf1f04", "0414521f56b3c4732044fca0", "90de17984e1b1ee0d9f0450c", "4595fd62837d206daf6966ef", "57bafff0a98c5cfa05a5bf2e", "c18e44d1b20b1f13647c8dd7", "c202dc852c134a6e2dec89ae", "043e3d8384b19746b925b2ce", "0d844dbb33bf933dec776f72"];
 /* Shared leaderboard: paste your Supabase project URL and publishable (anon) key here. Empty = scores stay on this device. */
 const ONLINE = { url: 'https://ohqthhqmqjnmjquoarnr.supabase.co', key: 'sb_publishable_tvRUVQ9tBICM6bEcbaDfaA_DZjXvcsm' };
 const BASE_LOOK = { color: 'c-blue', hat: 'none', face: 'glasses', extra: 'none', frame: 'f-none', nstyle: 'n-plain', title: 't-none' };
@@ -879,12 +883,13 @@ function render(time, dt) {
 const hud = $('hud'), hideBtn = $('hideBtn'), timerEl = $('timer'), heatEl = $('heat'), floorChip = $('floorChip');
 let toastTimer;
 function toast(msg) { const t = $('toastText'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('on'), 2400); }
-function show(id) { for (const s of ['menu', 'custom', 'board', 'gate', 'result']) $(s).hidden = s !== id; }
+function show(id) { for (const s of ['menu', 'custom', 'board', 'result']) $(s).hidden = s !== id; }
 function nickNow() { const n = $('nick').value.trim().slice(0, 14); return n.length >= 2 ? n : 'student'; }
 function paintKeys() { const c = $('keysChip'); c.textContent = 'KEYS '; for (const k of keys) { const s = document.createElement('span'); s.className = 'k' + (k.got ? ' got' : ''); s.textContent = k.got ? '✓' : 'F' + (k.f + 1); c.appendChild(s); } }
 function startRun() {
   if (!ok3d) return;
-  if (!save.access) { openGate(); return; }
+  if (!save.code) { openGate(); return; }
+  syncProfile();
   save.nick = nickNow(); persist();
   newRun(); mode = 'run'; show(null); hud.hidden = false; hideBtn.hidden = true; input.x = input.y = 0; input.joy = null;
   toast(keys.length > 1 ? `Run! Find ${keys.length} keys, then the exit` : 'Run! Find the key, then the exit');
@@ -909,17 +914,20 @@ function endRun(won, by, inSpot) {
 }
 let boardLv = save.level; const remoteRows = {};
 const cleanLook = l => { const o = {}; for (const k in BASE_LOOK) o[k] = item(k, l && l[k]).id; return o; };
-async function remote(path, body) {
-  const r = await fetch(ONLINE.url + '/rest/v1/' + path, { method: body ? 'POST' : 'GET', body: body && JSON.stringify(body), headers: { apikey: ONLINE.key, Authorization: 'Bearer ' + ONLINE.key, 'Content-Type': 'application/json', Prefer: 'return=minimal' } });
-  if (!r.ok) throw new Error('leaderboard ' + r.status); return body ? null : r.json();
-}
-function loadRemote(lv) { if (!ONLINE.url) return;
-  remote(`scores?select=nick,ms,look&level=eq.${lv}&order=ms.asc&limit=300`).then(rows => { const best = new Map();
-    for (const r of rows) { const nick = String(r.nick || '').slice(0, 14); if (nick && !best.has(nick)) best.set(nick, { nick, ms: +r.ms || 0, look: cleanLook(r.look), lv }); }
-    remoteRows[lv] = [...best.values()]; if (!$('board').hidden && boardLv === lv) paintBoard(); }).catch(() => {}); }
-function submitRemote(row) { if (ONLINE.url) remote('scores', { nick: row.nick, level: row.lv, ms: row.ms, look: row.look }).catch(() => {}); }
+const remoteAt = {};
+function loadRemote(lv, force) { if (!ONLINE.url || (!force && Date.now() - (remoteAt[lv] || 0) < 30000)) return;   // cache each level for 30 s
+  remoteAt[lv] = Date.now();
+  API(`leaderboard?select=nick,ms,look&level=eq.${lv}&order=ms.asc&limit=100`).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(rows => {
+    remoteRows[lv] = rows.map(r => ({ nick: String(r.nick || '').slice(0, 14), ms: +r.ms || 0, look: cleanLook(r.look), lv }));
+    if (!$('board').hidden && boardLv === lv) paintBoard(); }).catch(() => { remoteAt[lv] = 0; }); }
+function submitRemote(row) { if (!ONLINE.url || !save.code) return;
+  API('rpc/submit_score', { p_code: save.code, p_device: deviceId(), p_level: row.lv, p_ms: row.ms, p_nick: row.nick, p_look: row.look })
+    .then(() => { save.synced = JSON.stringify([row.nick, row.look]); persist(); loadRemote(row.lv, true); }).catch(() => {}); }
+function syncProfile() {                            // push nick/style changes to existing rows, only when they changed
+  if (!ONLINE.url || !save.code) return; const now = JSON.stringify([nickNow(), cleanLook(save.look)]); if (now === save.synced) return;
+  API('rpc/set_profile', { p_code: save.code, p_device: deviceId(), p_nick: nickNow(), p_look: cleanLook(save.look) }).then(r => { if (r.ok) { save.synced = now; persist(); for (const k in remoteAt) remoteAt[k] = 0; } }).catch(() => {}); }
 function board(lv) {
-  const mine = save.scores.filter(s => s.lv === lv).map(s => ({ ...s, look: cleanLook(s.look) }));
+  const mine = save.scores.filter(s => s.lv === lv && (!ONLINE.url || s.nick === save.nick)).map(s => ({ ...s, look: cleanLook(s.look) }));
   const others = remoteRows[lv] ? remoteRows[lv].filter(r => !mine.some(m => m.nick === r.nick && m.ms <= r.ms)) : [];
   return [...mine.filter(m => !others.some(o => o.nick === m.nick)), ...others].sort((a, b) => a.ms - b.ms);
 }
@@ -979,34 +987,35 @@ function deviceId() {
   if (!d) { d = (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)); try { localStorage.setItem('ismrun.device', d); } catch (e) {} }
   return d;
 }
-let gateMsg = '';
-async function codeOk(raw) {
-  const c = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/^ISM/, ''); gateMsg = 'That code does not work. Check it against your invite and try again.'; if (c.length !== 5) return false;
-  if (ONLINE.url) {                                // online: each code is bound to the first device that uses it
-    try { const r = await fetch(ONLINE.url + '/rest/v1/rpc/claim_code', { method: 'POST', headers: { apikey: ONLINE.key, Authorization: 'Bearer ' + ONLINE.key, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_code: 'ISM-' + c, p_device: deviceId() }) });
-      if (!r.ok) { gateMsg = 'Could not check the code right now. Check your connection and try again.'; return false; }
-      const v = await r.json(); if (v === 'ok') return true;
-      if (v === 'taken') gateMsg = 'This code is already in use on another device. Ask whoever gave you the link.'; return false;
-    } catch (e) { gateMsg = 'Could not check the code right now. Check your connection and try again.'; return false; }
-  }
-  try { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('ismrun:ISM-' + c));
-    return ACCESS.includes([...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('').slice(0, 24)); } catch (e) { return false; }
+const API = (path, body) => fetch(ONLINE.url + '/rest/v1/' + path, { method: body ? 'POST' : 'GET', body: body && JSON.stringify(body),
+  headers: { apikey: ONLINE.key, Authorization: 'Bearer ' + ONLINE.key, 'Content-Type': 'application/json' } });
+const normCode = raw => { const c = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/^ISM/, ''); return c.length === 5 ? 'ISM-' + c : null; };
+async function claim(code) {                       // 'ok' | 'taken' | 'bad' | 'net'. Each code binds to the first device that uses it.
+  if (!code) return 'bad';
+  try { const r = await API('rpc/claim_code', { p_code: code, p_device: deviceId() }); if (!r.ok) return 'net'; const v = await r.json(); return v === 'ok' || v === 'taken' ? v : 'bad'; }
+  catch (e) { return 'net'; }
 }
-function openGate() { $('codeErr').textContent = ''; $('gate').hidden = false; setTimeout(() => $('codeIn').focus(), 50); }
+const MSG = { bad: 'That code does not work. Check it against your invite and try again.', taken: 'This code is already in use on another device. Ask whoever gave you the invite.', net: 'Could not check the code. Check your connection and try again.' };
+function paintId() { const t = save.code ? 'ID: ' + save.code : ''; $('idTag').textContent = t; $('idChip').textContent = t; $('idTag').hidden = $('idChip').hidden = !save.code; }
+function openGate(msg, code) { $('gate').classList.remove('busy'); $('gateTitle').textContent = 'Enter your access code'; $('codeErr').textContent = msg || ''; if (code) $('codeIn').value = code; $('gate').hidden = false; setTimeout(() => $('codeIn').focus(), 50); }
+function unlock(code) { save.code = code; delete save.access; persist(); paintId(); $('gate').hidden = true; }
 $('gateForm').addEventListener('submit', async e => { e.preventDefault();
-  if (await codeOk($('codeIn').value)) { save.access = true; persist(); $('gate').hidden = true; startRun(); }
-  else $('codeErr').textContent = gateMsg; });
-$('gateCancel').onclick = () => { $('gate').hidden = true; };
-(async () => {                                     // invite link: ...?code=ISM-XXXXX or #ISM-XXXXX
-  const q = new URLSearchParams(location.search).get('code') || (location.hash.match(/ISM-?[A-Z0-9]{5}/i) || [])[0];
-  if (!q) return;
-  try { history.replaceState(null, '', location.pathname); } catch (e) {}
-  if (await codeOk(q)) { save.access = true; persist(); toast('Access unlocked. Have a good run!'); } else { openGate(); $('codeIn').value = q.toUpperCase(); $('codeErr').textContent = gateMsg; }
+  const code = normCode($('codeIn').value), btn = $('codeOk'); if (!code) { $('codeErr').textContent = MSG.bad; return; }
+  btn.disabled = true; btn.textContent = 'CHECKING…'; const v = await claim(code); btn.disabled = false; btn.textContent = 'ENTER';
+  if (v === 'ok') { unlock(code); toast('Welcome in. Have a good run!'); } else $('codeErr').textContent = MSG[v]; });
+(async () => {                                     // every visit: re-check the saved code (or the one from an invite link) with the server
+  const fromLink = normCode(new URLSearchParams(location.search).get('code') || (location.hash.match(/ISM-?[A-Z0-9]{5}/i) || [])[0]);
+  if (fromLink) try { history.replaceState(null, '', location.pathname); } catch (e) {}
+  const code = fromLink || save.code; paintId();
+  if (!code) return openGate();
+  $('gate').classList.add('busy'); $('gateTitle').textContent = 'Checking access…';
+  const v = await claim(code);
+  if (v === 'ok') unlock(code); else { if (v !== 'net') { save.code = null; persist(); paintId(); } openGate(MSG[v], code); }
 })();
 $('startBtn').onclick = startRun;
 $('customBtn').onclick = () => { save.nick = nickNow(); paintCustom(); show('custom'); };
-$('customBack').onclick = () => { show('menu'); };
-$('boardBtn').onclick = () => { save.nick = nickNow(); boardLv = save.level; loadRemote(boardLv); paintBoard(); show('board'); };
+$('customBack').onclick = () => { show('menu'); syncProfile(); };
+$('boardBtn').onclick = () => { save.nick = nickNow(); syncProfile(); boardLv = save.level; loadRemote(boardLv); paintBoard(); show('board'); };
 $('boardBack').onclick = () => { show('menu'); mode = 'menu'; };
 $('boardStyle').onclick = () => { mode = 'menu'; paintCustom(); show('custom'); };
 $('resAgain').onclick = () => { $('result').hidden = true; startRun(); };

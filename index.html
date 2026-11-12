@@ -78,6 +78,12 @@ button:focus-visible,input:focus-visible{outline:3px solid #fff;outline-offset:2
 .gate .sheet{border-radius:26px;border:4px solid var(--ink);box-shadow:0 8px 0 var(--ink)}
 .gate .logo{margin:0 0 6px}
 .gate.busy .sheet>*:not(.logo):not(#gateTitle){visibility:hidden}
+.coin{display:inline-block;width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3a6,#ffc928 45%,#d98f00);box-shadow:inset 0 0 0 2px #b36b00;vertical-align:-4px;flex:none}
+.coin.big{width:38px;height:38px;vertical-align:-5px;box-shadow:inset 0 0 0 3px #b36b00}
+.coinTag{position:absolute;top:12px;left:12px;z-index:3;display:flex;align-items:center;gap:6px;font-size:15px;font-weight:900;background:var(--ink);border:3px solid #fff;border-radius:12px;padding:3px 4px 3px 7px;font-variant-numeric:tabular-nums}
+.coinTag.inline{position:static;margin-left:auto}
+.coinTag .plus{width:22px;height:22px;border-radius:8px;background:var(--go);color:var(--ink);display:grid;place-items:center;font-size:17px;line-height:1}
+.coinTag.bump{animation:pop .35s cubic-bezier(.3,1.6,.5,1)}
 .idTag{position:absolute;top:12px;right:12px;z-index:3;font-size:13px;font-weight:900;letter-spacing:.04em;background:var(--ink);border:3px solid #fff;border-radius:12px;padding:4px 10px;font-variant-numeric:tabular-nums}
 .chip.id{background:var(--ink);color:#fff;border-color:#fff}
 .codeIn{width:100%;max-width:280px;letter-spacing:.12em;text-transform:uppercase}
@@ -97,6 +103,7 @@ p{margin:0;font-size:15px;line-height:1.4}
 .sheet{width:100%;background:var(--deep);border-top:4px solid var(--ink);border-radius:26px 26px 0 0;padding:18px 16px 20px;display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center;box-shadow:0 -4px 0 #fff inset}
 .row{display:flex;gap:10px;width:100%}
 .btn{flex:1;height:52px;border-radius:16px;border:3px solid var(--ink);background:var(--card);box-shadow:0 4px 0 var(--ink);font-family:var(--display);font-size:17px}
+.btn.hot{background:var(--go);color:var(--ink)}
 .btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
 .price{font-family:var(--display);font-size:46px;line-height:1;color:var(--sun)}
 
@@ -137,6 +144,9 @@ p{margin:0;font-size:15px;line-height:1.4}
 .opt .frame{width:66px;height:66px}
 .opt b{font-size:12.5px;font-weight:800;line-height:1.1;text-align:center}
 .opt small{font-size:12px;font-weight:900;color:var(--soft)}
+.opt small.paid{display:inline-flex;align-items:center;gap:4px;}
+.opt small.paid .coin{width:14px;height:14px;vertical-align:-2px}
+.opt small.own{color:var(--go)}
 .opt small.paid{color:var(--ink);background:var(--sun);border-radius:7px;padding:1px 7px}
 .opt.sel{border-color:var(--go);box-shadow:0 0 0 3px var(--go)}
 .opt .demoNick{height:66px;display:grid;place-items:center;font-size:17px;width:100%}
@@ -181,11 +191,12 @@ p{margin:0;font-size:15px;line-height:1.4}
 
   <section id="menu" class="stage">
     <div class="idTag" id="idTag"></div>
+    <button class="coinTag" id="coinTag" type="button" aria-label="Coins. Enter a promo code"><span class="coin"></span><b id="coinNum">0</b><span class="plus">+</span></button>
     <div class="logo out" style="margin-top:30px">ISM <b>RUN</b></div>
     <div class="ribbon">ESCAPE THE LECTURE</div>
     <div class="heroWrap">
       <canvas id="heroCv" width="480" height="560"></canvas>
-      <div class="side l"><button class="tile" id="customBtn" type="button"><i>👕</i>STYLE</button></div>
+      <div class="side l"><button class="tile" id="customBtn" type="button"><i>👕</i>STYLE</button><button class="tile" id="promoBtn" type="button"><i>🎁</i>PROMO</button></div>
       <div class="side r"><button class="tile" id="boardBtn" type="button"><i>🏆</i>TOP</button></div>
     </div>
     <div class="plate">
@@ -200,7 +211,7 @@ p{margin:0;font-size:15px;line-height:1.4}
   </section>
 
   <section id="custom" class="panel" hidden>
-    <header><h2 class="out">Style</h2><button class="x" id="customBack" type="button" aria-label="Close">✕</button></header>
+    <header><h2 class="out">Style</h2><button class="coinTag inline" id="styleCoins" type="button" aria-label="Coins. Enter a promo code"><span class="coin"></span><b id="styleCoinNum">0</b><span class="plus">+</span></button><button class="x" id="customBack" type="button" aria-label="Close">✕</button></header>
     <div class="look">
       <canvas id="preview" width="360" height="420"></canvas>
       <div class="card"><div class="frame" id="pvFrame"><canvas id="pvFace" width="96" height="96"></canvas></div><div><span class="nk" id="pvNick"></span><span class="ttl" id="pvTitle"></span></div></div>
@@ -229,6 +240,30 @@ p{margin:0;font-size:15px;line-height:1.4}
       <input class="nickIn codeIn" id="codeIn" type="text" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ISM-XXXXX" aria-describedby="codeErr">
       <p class="err" id="codeErr" role="alert"></p>
       <button class="cta sm out" id="codeOk" type="submit">ENTER</button>
+    </form>
+  </section>
+
+  <section id="buy" class="modal" hidden>
+    <div class="sheet">
+      <h3>Buy item</h3>
+      <h2 class="out" id="buyName"></h2>
+      <div class="price out"><span class="coin big"></span> <span id="buyPrice"></span></div>
+      <p id="buyBal"></p>
+      <p class="err" id="buyErr" role="alert"></p>
+      <button class="cta sun sm out" id="buyOk" type="button">BUY</button>
+      <div class="row"><button class="btn" id="buyPromo" type="button">Promo code</button><button class="btn" id="buyCancel" type="button">Cancel</button></div>
+    </div>
+  </section>
+
+  <section id="promo" class="modal" hidden>
+    <form class="sheet" id="promoForm" novalidate>
+      <h3>Promo code</h3>
+      <h2 class="out">Get coins</h2>
+      <p>Each promo code works once. Coins go to your ID and stay with it.</p>
+      <input class="nickIn codeIn" id="promoIn" type="text" maxlength="16" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="RUN-XXXX-XXXX" aria-describedby="promoErr">
+      <p class="err" id="promoErr" role="alert"></p>
+      <button class="cta sun sm out" id="promoOk" type="submit">REDEEM</button>
+      <div class="row"><button class="btn" id="promoCancel" type="button">Close</button></div>
     </form>
   </section>
 
@@ -388,29 +423,29 @@ function persist() { try { localStorage.setItem(KEY, JSON.stringify(save)); } ca
 const SHOP = {
   color: { tab: 'Shirt', items: [
     { id: 'c-blue', name: 'Blue', v: 0x2f7de1, price: 0 }, { id: 'c-slate', name: 'Slate', v: 0x596579, price: 0 }, { id: 'c-green', name: 'Green', v: 0x1c9c5e, price: 0 },
-    { id: 'c-pink', name: 'Hot pink', v: 0xff4fa3, price: 0.49 }, { id: 'c-violet', name: 'Violet', v: 0x8a5cff, price: 0.49 }, { id: 'c-lava', name: 'Lava', v: 0xff5a36, price: 0.49 },
-    { id: 'c-gold', name: 'Gold', v: 0xffc928, price: 0.99 }, { id: 'c-void', name: 'Void black', v: 0x17171f, price: 0.99 }, { id: 'c-mint', name: 'Mint', v: 0x7dffd0, price: 0.49 } ] },
+    { id: 'c-pink', name: 'Hot pink', v: 0xff4fa3, price: 50 }, { id: 'c-violet', name: 'Violet', v: 0x8a5cff, price: 50 }, { id: 'c-lava', name: 'Lava', v: 0xff5a36, price: 50 },
+    { id: 'c-gold', name: 'Gold', v: 0xffc928, price: 100 }, { id: 'c-void', name: 'Void black', v: 0x17171f, price: 100 }, { id: 'c-mint', name: 'Mint', v: 0x7dffd0, price: 50 } ] },
   hat: { tab: 'Head', items: [
-    { id: 'none', name: 'Bed hair', price: 0 }, { id: 'cap', name: 'Cap', price: 0.49 }, { id: 'phones', name: 'Headphones', price: 0.49 },
-    { id: 'cone', name: 'Traffic cone', price: 0.99 }, { id: 'propeller', name: 'Propeller hat', price: 0.99 }, { id: 'cat', name: 'Cat ears', price: 0.99 },
-    { id: 'pan', name: 'Saucepan', price: 0.99 }, { id: 'duck', name: 'Rubber duck', price: 1.49 }, { id: 'tophat', name: 'Top hat', price: 1.49 },
-    { id: 'grad', name: 'Grad cap', price: 0.99 }, { id: 'wizard', name: 'Wizard hat', price: 1.49 }, { id: 'halo', name: 'Halo', price: 1.99 }, { id: 'crown', name: 'Crown', price: 1.99 } ] },
+    { id: 'none', name: 'Bed hair', price: 0 }, { id: 'cap', name: 'Cap', price: 50 }, { id: 'phones', name: 'Headphones', price: 50 },
+    { id: 'cone', name: 'Traffic cone', price: 100 }, { id: 'propeller', name: 'Propeller hat', price: 100 }, { id: 'cat', name: 'Cat ears', price: 100 },
+    { id: 'pan', name: 'Saucepan', price: 100 }, { id: 'duck', name: 'Rubber duck', price: 150 }, { id: 'tophat', name: 'Top hat', price: 150 },
+    { id: 'grad', name: 'Grad cap', price: 100 }, { id: 'wizard', name: 'Wizard hat', price: 150 }, { id: 'halo', name: 'Halo', price: 200 }, { id: 'crown', name: 'Crown', price: 200 } ] },
   face: { tab: 'Face', items: [
-    { id: 'glasses', name: 'Nerd glasses', price: 0 }, { id: 'bare', name: 'No glasses', price: 0 }, { id: 'shades', name: 'Deal-with-it', price: 0.99 },
-    { id: '3d', name: '3D glasses', price: 0.49 }, { id: 'stache', name: 'Moustache', price: 0.49 }, { id: 'clown', name: 'Clown nose', price: 0.49 }, { id: 'mask', name: 'Exam-week mask', price: 0.49 } ] },
+    { id: 'glasses', name: 'Nerd glasses', price: 0 }, { id: 'bare', name: 'No glasses', price: 0 }, { id: 'shades', name: 'Deal-with-it', price: 100 },
+    { id: '3d', name: '3D glasses', price: 50 }, { id: 'stache', name: 'Moustache', price: 50 }, { id: 'clown', name: 'Clown nose', price: 50 }, { id: 'mask', name: 'Exam-week mask', price: 50 } ] },
   extra: { tab: 'Gear', items: [
-    { id: 'none', name: 'Nothing', price: 0 }, { id: 'backpack', name: 'Backpack', price: 0.49 }, { id: 'coffee', name: 'Coffee', price: 0.49 },
-    { id: 'pizza', name: 'Pizza box', price: 0.99 }, { id: 'cape', name: 'Cape', price: 0.99 }, { id: 'jetpack', name: 'Jetpack', price: 1.99 } ] },
+    { id: 'none', name: 'Nothing', price: 0 }, { id: 'backpack', name: 'Backpack', price: 50 }, { id: 'coffee', name: 'Coffee', price: 50 },
+    { id: 'pizza', name: 'Pizza box', price: 100 }, { id: 'cape', name: 'Cape', price: 100 }, { id: 'jetpack', name: 'Jetpack', price: 200 } ] },
   frame: { tab: 'Frame', items: [
-    { id: 'f-none', name: 'Plain', price: 0 }, { id: 'f-gold', name: 'Gold', price: 0.99 }, { id: 'f-fire', name: 'On fire', price: 0.99 }, { id: 'f-ice', name: 'Ice cold', price: 0.99 },
-    { id: 'f-toxic', name: 'Toxic', price: 0.99 }, { id: 'f-pizza', name: 'Pepperoni', price: 0.99 }, { id: 'f-rainbow', name: 'Rainbow', price: 1.49 }, { id: 'f-dean', name: "Dean's list", price: 1.99 } ] },
+    { id: 'f-none', name: 'Plain', price: 0 }, { id: 'f-gold', name: 'Gold', price: 100 }, { id: 'f-fire', name: 'On fire', price: 100 }, { id: 'f-ice', name: 'Ice cold', price: 100 },
+    { id: 'f-toxic', name: 'Toxic', price: 100 }, { id: 'f-pizza', name: 'Pepperoni', price: 100 }, { id: 'f-rainbow', name: 'Rainbow', price: 150 }, { id: 'f-dean', name: "Dean's list", price: 200 } ] },
   nstyle: { tab: 'Nick', items: [
-    { id: 'n-plain', name: 'Plain', price: 0 }, { id: 'n-gold', name: 'Gold', price: 0.49 }, { id: 'n-fire', name: 'Fire', price: 0.49 }, { id: 'n-ice', name: 'Ice', price: 0.49 },
-    { id: 'n-matrix', name: 'Hacker', price: 0.49 }, { id: 'n-comic', name: 'Comic', price: 0.99 }, { id: 'n-glitch', name: 'Glitch', price: 0.99 }, { id: 'n-rainbow', name: 'Rainbow', price: 1.49 } ] },
+    { id: 'n-plain', name: 'Plain', price: 0 }, { id: 'n-gold', name: 'Gold', price: 50 }, { id: 'n-fire', name: 'Fire', price: 50 }, { id: 'n-ice', name: 'Ice', price: 50 },
+    { id: 'n-matrix', name: 'Hacker', price: 50 }, { id: 'n-comic', name: 'Comic', price: 100 }, { id: 'n-glitch', name: 'Glitch', price: 100 }, { id: 'n-rainbow', name: 'Rainbow', price: 150 } ] },
   title: { tab: 'Title', items: [
-    { id: 't-none', name: 'No title', price: 0 }, { id: 't-late', name: 'Always late', price: 0 }, { id: 't-coffee', name: 'Runs on coffee', price: 0.49 },
-    { id: 't-deadline', name: 'Deadline survivor', price: 0.49 }, { id: 't-pizza', name: 'Here for free pizza', price: 0.49 }, { id: 't-ctrlc', name: 'Ctrl+C Ctrl+V', price: 0.49 },
-    { id: 't-sleep', name: 'Sleeps in row one', price: 0.49 }, { id: 't-dean', name: "Dean's nightmare", price: 0.99 }, { id: 't-skip', name: 'Certified skipper', price: 0.99 } ] },
+    { id: 't-none', name: 'No title', price: 0 }, { id: 't-late', name: 'Always late', price: 0 }, { id: 't-coffee', name: 'Runs on coffee', price: 50 },
+    { id: 't-deadline', name: 'Deadline survivor', price: 50 }, { id: 't-pizza', name: 'Here for free pizza', price: 50 }, { id: 't-ctrlc', name: 'Ctrl+C Ctrl+V', price: 50 },
+    { id: 't-sleep', name: 'Sleeps in row one', price: 50 }, { id: 't-dean', name: "Dean's nightmare", price: 100 }, { id: 't-skip', name: 'Certified skipper', price: 100 } ] },
 };
 const item = (slot, id) => SHOP[slot].items.find(i => i.id === id) || SHOP[slot].items[0];
 const BOTS = [
@@ -555,11 +590,27 @@ function buildWorld() {
     bx.forEach(([x, y, z, sx, sy, sz, c], i) => { M.compose(P.set(x, y + sy / 2, z), Q, S.set(sx, sy, sz)); stuff.setMatrixAt(i, M); stuff.setColorAt(i, col(c)); });
     stuff.castShadow = stuff.receiveShadow = true; G.add(stuff);
   }
-  // every possible exit looks the same: a grey double door
-  for (const e of EXITS) { const g = new T.Group(), body = new T.Mesh(UNIT, lam(0x7d8799)); body.scale.set(1, 1.05, 1); body.position.y = .525; body.castShadow = true;
-    const horiz = e.y === 0 || e.y === H - 1, bar = new T.Mesh(UNIT, lam(0x2b3144)); bar.scale.set(horiz ? .06 : 1.03, .95, horiz ? 1.03 : .06); bar.position.y = .5;
-    const lamp = new T.Mesh(UNIT, new T.MeshBasicMaterial({ color: 0xffffff })); lamp.scale.set(.4, .14, .4); lamp.position.y = 1.14;
-    g.add(body, bar, lamp); g.position.set(e.x + .5, 0, e.y + .5); floorsG[0].add(g); e.body = body; e.lamp = lamp; }
+  // every possible exit looks the same: glass double doors under a glowing EXIT sign
+  const signTex = (bg, txt) => canvasTex(256, 96, (g) => { g.fillStyle = bg; g.fillRect(0, 0, 256, 96); g.strokeStyle = '#fff'; g.lineWidth = 6; g.strokeRect(5, 5, 246, 86);
+    g.fillStyle = '#fff'; g.font = '900 54px Arial,sans-serif'; g.textAlign = 'left'; g.textBaseline = 'middle'; g.fillText(txt, 84, 52, 160);
+    g.lineCap = 'round'; g.lineWidth = 9; g.beginPath(); g.arc(46, 24, 8, 0, 7); g.fill();               // running figure
+    g.beginPath(); g.moveTo(44, 34); g.lineTo(38, 56); g.lineTo(52, 74); g.moveTo(38, 56); g.lineTo(24, 72); g.moveTo(42, 40); g.lineTo(58, 48); g.moveTo(42, 40); g.lineTo(26, 46); g.stroke(); });
+  const matTex = (bg) => canvasTex(128, 96, (g) => { g.fillStyle = '#2b3144'; g.fillRect(0, 0, 128, 96); g.fillStyle = bg; g.fillRect(8, 8, 112, 80);
+    g.fillStyle = '#fff'; g.beginPath(); g.moveTo(64, 14); g.lineTo(34, 50); g.lineTo(52, 50); g.lineTo(52, 82); g.lineTo(76, 82); g.lineTo(76, 50); g.lineTo(94, 50); g.fill(); });
+  const EXIT_ON = signTex('#14a64a', 'EXIT'), EXIT_NO = signTex('#d8352a', 'NOPE'), MAT_ON = matTex('#1c9c5e'), MAT_NO = matTex('#b8362f');
+  for (const e of EXITS) {
+    const g = new T.Group(), metal = lam(0x3b4256), glass = new T.MeshLambertMaterial({ color: col(0x9fdcff), transparent: true, opacity: .55 });
+    const box = (m, sx, sy, sz, x, y, z) => { const b = new T.Mesh(UNIT, m); b.scale.set(sx, sy, sz); b.position.set(x, y + sy / 2, z); b.castShadow = true; g.add(b); return b; };
+    box(metal, .1, 1.1, .3, -.47, 0, 0); box(metal, .1, 1.1, .3, .47, 0, 0); box(metal, 1.04, .14, .3, 0, .96, 0);
+    for (const sx of [-.215, .215]) { box(glass, .41, .9, .05, sx, .04, 0); box(metal, .41, .05, .07, sx, .04, 0); box(lam(0xc9ccd4), .3, .05, .06, sx, .44, .07); }
+    box(metal, .03, .9, .07, 0, .04, 0);
+    const green = new T.MeshBasicMaterial({ color: 0x14a64a }), face = new T.MeshBasicMaterial({ map: EXIT_ON });
+    const sign = new T.Mesh(UNIT, [green, green, green, green, face, green]); sign.scale.set(.78, .28, .14); sign.position.set(0, 1.32, .06); g.add(sign);
+    const mat = new T.Mesh(new T.PlaneGeometry(.9, .62), new T.MeshBasicMaterial({ map: MAT_ON })); mat.rotation.x = -Math.PI / 2; mat.position.set(0, .025, .82); g.add(mat);
+    g.position.set(e.x + .5, 0, e.y + .5); g.rotation.y = Math.atan2(e.ax - e.x, e.ay - e.y); floorsG[0].add(g);
+    sign.rotation.y = -g.rotation.y; sign.scale.set(1, .36, .12); sign.position.y = 1.45;   // the sign always faces the camera, like a hanging blade sign
+    e.mark = (bad) => { face.map = bad ? EXIT_NO : EXIT_ON; green.color.set(bad ? 0xd8352a : 0x14a64a); mat.material.map = bad ? MAT_NO : MAT_ON; face.needsUpdate = mat.material.needsUpdate = true; };
+  }
   for (let i = 0; i < 4; i++) { const g = new T.Group(), gold = lam(0xffc928);
     const ring = new T.Mesh(new T.TorusGeometry(.14, .05, 6, 12), gold), sh = new T.Mesh(UNIT, gold), t1 = new T.Mesh(UNIT, gold), t2 = new T.Mesh(UNIT, gold);
     ring.position.y = .25; sh.scale.set(.07, .4, .07); sh.position.y = -.08; t1.scale.set(.16, .06, .07); t1.position.set(.08, -.2, 0); t2.scale.set(.12, .06, .07); t2.position.set(.06, -.08, 0);
@@ -728,7 +779,7 @@ function newRun() {
     used.add(r); keys.push({ f, x: x + .5, y: y + .5, got: false, mesh: keyMeshes[i] });
   });
   realExit = rnd(lvExits);
-  EXITS.forEach(e => { e.tried = false; e.body.material.color.copy(col(0x7d8799)); e.lamp.material.color.set(0xffffff); });
+  EXITS.forEach(e => { e.tried = false; e.mark(false); });
   paintKeys();
 }
 function spawnTeacher(def) {
@@ -836,7 +887,7 @@ function update(dt) {
     if (player.f === 0) for (const e of lvExits) if (Math.hypot(e.x + .5 - player.x, e.y + .5 - player.y) < 1.15) {
       if (got() < keys.length) say(`Locked. You have ${got()} of ${keys.length} keys`);
       else if (e === realExit) return endRun(true);
-      else if (!e.tried) { e.tried = true; e.body.material.color.copy(col(0xb8362f)); e.lamp.material.color.set(0xff3b3b); msgAt = clock; toast('Wrong door! The real exit is somewhere else'); }
+      else if (!e.tried) { e.tried = true; e.mark(true); msgAt = clock; toast('Wrong door! The real exit is somewhere else'); }
     }
   }
   for (const key of keys) if (!key.got && key.f === player.f && Math.hypot(player.x - key.x, player.y - key.y) < 0.85) {
@@ -883,7 +934,7 @@ function render(time, dt) {
 const hud = $('hud'), hideBtn = $('hideBtn'), timerEl = $('timer'), heatEl = $('heat'), floorChip = $('floorChip');
 let toastTimer;
 function toast(msg) { const t = $('toastText'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('on'), 2400); }
-function show(id) { for (const s of ['menu', 'custom', 'board', 'result']) $(s).hidden = s !== id; }
+function show(id) { for (const s of ['menu', 'custom', 'board', 'result', 'buy', 'promo']) $(s).hidden = s !== id; }
 function nickNow() { const n = $('nick').value.trim().slice(0, 14); return n.length >= 2 ? n : 'student'; }
 function paintKeys() { const c = $('keysChip'); c.textContent = 'KEYS '; for (const k of keys) { const s = document.createElement('span'); s.className = 'k' + (k.got ? ' got' : ''); s.textContent = k.got ? '✓' : 'F' + (k.f + 1); c.appendChild(s); } }
 function startRun() {
@@ -976,7 +1027,10 @@ function paintCustom() {
     else { pic = document.createElement('canvas'); pic.className = 'th'; pic.width = pic.height = 120; paintBust(pic, look); }
     if (tab === 'title') b.append(pic); else { const n = document.createElement('b'); n.textContent = it.name; b.append(pic, n); }
     b.setAttribute('aria-pressed', save.look[tab] === it.id);
-    b.onclick = () => { save.look[tab] = it.id; persist(); paintCustom(); };
+    const own = ownsIt(tab, it), p = document.createElement('small');
+    if (it.price === 0) p.textContent = 'free'; else if (own) { p.textContent = 'owned'; p.className = 'own'; } else { p.className = 'paid'; p.innerHTML = '<span class="coin"></span>'; p.append(String(it.price)); }
+    b.appendChild(p);
+    b.onclick = () => { if (!own) return openBuy(tab, it); save.look[tab] = it.id; persist(); paintCustom(); };
     host.appendChild(b);
   }
 }
@@ -998,7 +1052,7 @@ async function claim(code) {                       // 'ok' | 'taken' | 'bad' | '
 const MSG = { bad: 'That code does not work. Check it against your invite and try again.', taken: 'This code is already in use on another device. Ask whoever gave you the invite.', net: 'Could not check the code. Check your connection and try again.' };
 function paintId() { const t = save.code ? 'ID: ' + save.code : ''; $('idTag').textContent = t; $('idChip').textContent = t; $('idTag').hidden = $('idChip').hidden = !save.code; }
 function openGate(msg, code) { $('gate').classList.remove('busy'); $('gateTitle').textContent = 'Enter your access code'; $('codeErr').textContent = msg || ''; if (code) $('codeIn').value = code; $('gate').hidden = false; setTimeout(() => $('codeIn').focus(), 50); }
-function unlock(code) { save.code = code; delete save.access; persist(); paintId(); $('gate').hidden = true; }
+function unlock(code) { save.code = code; delete save.access; persist(); paintId(); $('gate').hidden = true; loadWallet(); }
 $('gateForm').addEventListener('submit', async e => { e.preventDefault();
   const code = normCode($('codeIn').value), btn = $('codeOk'); if (!code) { $('codeErr').textContent = MSG.bad; return; }
   btn.disabled = true; btn.textContent = 'CHECKING…'; const v = await claim(code); btn.disabled = false; btn.textContent = 'ENTER';
@@ -1012,6 +1066,46 @@ $('gateForm').addEventListener('submit', async e => { e.preventDefault();
   const v = await claim(code);
   if (v === 'ok') unlock(code); else { if (v !== 'net') { save.code = null; persist(); paintId(); } openGate(MSG[v], code); }
 })();
+
+/* ---------- Coins: balance and purchases live on the server, tied to the access code ---------- */
+const wallet = { balance: 0, owned: new Set(), loaded: false };
+const ownsIt = (slot, it) => it.price === 0 || wallet.owned.has(slot + ':' + it.id);
+function paintCoins(bump) { for (const id of ['coinNum', 'styleCoinNum']) $(id).textContent = wallet.balance;
+  if (bump) for (const id of ['coinTag', 'styleCoins']) { const el = $(id); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); } }
+function applyWallet(w, bump) {
+  if (!w || typeof w.balance !== 'number') return;
+  wallet.balance = w.balance; wallet.owned = new Set(w.owned || []); wallet.loaded = true;
+  let changed = false; for (const k in BASE_LOOK) if (!ownsIt(k, item(k, save.look[k]))) { save.look[k] = BASE_LOOK[k]; changed = true; }
+  if (changed) persist();
+  paintCoins(bump); paintProfile(); if (!$('custom').hidden) paintCustom();
+}
+const rpc = (fn, args) => API('rpc/' + fn, { p_code: save.code, p_device: deviceId(), ...args }).then(r => r.ok ? r.json() : Promise.reject(r.status));
+function loadWallet() { if (save.code) rpc('get_wallet', {}).then(w => applyWallet(w)).catch(() => {}); }
+const PROMO_MSG = { used: 'This promo code has already been used.', bad: 'That promo code does not exist. Check the spelling.', auth: 'Your access could not be checked. Reload the page.', net: 'Could not reach the server. Check your connection and try again.' };
+function openPromo() { $('promoErr').textContent = ''; $('promoIn').value = ''; $('promo').hidden = false; setTimeout(() => $('promoIn').focus(), 50); }
+$('promoForm').addEventListener('submit', async e => { e.preventDefault();
+  const c = $('promoIn').value.toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/^RUN/, ''), btn = $('promoOk');
+  if (c.length !== 8) { $('promoErr').textContent = PROMO_MSG.bad; return; }
+  btn.disabled = true; btn.textContent = 'CHECKING…';
+  let w; try { w = await rpc('redeem_promo', { p_promo: 'RUN-' + c.slice(0, 4) + '-' + c.slice(4) }); } catch (err) { w = { status: 'net' }; }
+  btn.disabled = false; btn.textContent = 'REDEEM';
+  if (w.status === 'ok') { $('promo').hidden = true; applyWallet(w, true); toast(`+${w.amount} coins! You have ${w.balance} now`); }
+  else { if (w.status === 'used') applyWallet(w); $('promoErr').textContent = PROMO_MSG[w.status] || PROMO_MSG.bad; } });
+$('promoCancel').onclick = () => { $('promo').hidden = true; };
+for (const id of ['coinTag', 'styleCoins', 'promoBtn', 'buyPromo']) $(id).onclick = () => { $('buy').hidden = true; openPromo(); };
+let pending = null;
+function openBuy(slot, it) {
+  pending = { slot, it }; $('buyName').textContent = it.name; $('buyPrice').textContent = it.price; $('buyErr').textContent = '';
+  const poor = wallet.balance < it.price; $('buyBal').textContent = `You have ${wallet.balance} coins.` + (poor ? ` You need ${it.price - wallet.balance} more.` : '');
+  $('buyOk').hidden = poor; $('buyPromo').className = 'btn' + (poor ? ' hot' : ''); $('buy').hidden = false;
+}
+$('buyOk').onclick = async () => { const { slot, it } = pending, btn = $('buyOk'); btn.disabled = true;
+  let w; try { w = await rpc('buy_item', { p_slot: slot, p_item: it.id }); } catch (e) { w = { status: 'net' }; }
+  btn.disabled = false;
+  if (w.status === 'ok') { $('buy').hidden = true; applyWallet(w, true); save.look[slot] = it.id; persist(); paintCustom(); toast(it.name + ' is yours!'); }
+  else if (w.status === 'poor') { applyWallet(w); openBuy(slot, it); }
+  else $('buyErr').textContent = w.status === 'net' ? PROMO_MSG.net : 'Could not buy this item. Reload the page and try again.'; };
+$('buyCancel').onclick = () => { $('buy').hidden = true; };
 $('startBtn').onclick = startRun;
 $('customBtn').onclick = () => { save.nick = nickNow(); paintCustom(); show('custom'); };
 $('customBack').onclick = () => { show('menu'); syncProfile(); };
